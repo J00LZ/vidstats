@@ -18,6 +18,16 @@ import (
 	"time"
 )
 
+
+// Can both be extracted from the VidIQ api calls that the
+// browser plugin makes, just look for a url similar to
+// the one we used in this program.
+var vidIQAuth = ""
+var vidIQDeviceId = ""
+
+// the value of PHPSESSID on the generator site.
+var genSession = ""
+
 // ChannelTags are the useful tags
 // that we get from the YouTube api
 type ChannelTags struct {
@@ -123,7 +133,7 @@ func main() {
 						Tags: []string{},
 						Name: v.Title,
 					})
-				} else {//if it does
+				} else { //if it does
 					tags = append(tags, ChannelTags{
 						ID:   zz.Id,
 						Tags: zz.TopicDetails.TopicCategories,
@@ -224,7 +234,6 @@ func main() {
 	log.Printf("CSV made!")
 }
 
-
 func csvExport(data [][]string) error {
 	// create the destination csv file
 	file, err := os.Create("result.csv")
@@ -238,7 +247,7 @@ func csvExport(data [][]string) error {
 
 	for _, value := range data {
 		if err := writer.Write(value); err != nil {
-	// let's return errors if necessary, rather than having a one-size-fits-all error handler
+			// let's return errors if necessary, rather than having a one-size-fits-all error handler
 			return err
 		}
 	}
@@ -343,7 +352,7 @@ func downloadStats() []Channel {
 		x, keys = keys[:what], keys[what:]
 		statz, err := DoRequest(client,
 			"https://api.vidiq.com/youtube/channels/public/stats?from=2020-04-11&to=2021-03-11&ids="+
-			strings.Join(x, ","))
+				strings.Join(x, ","))
 		if err != nil {
 			log.Panic(err)
 		} else {
@@ -418,7 +427,7 @@ func GetChannels(client *http.Client) ([]string, error) {
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	// the session id can be found in the cookies when visiting the site.
-	req.Header.Add("Cookie", "PHPSESSID=")
+	req.Header.Add("Cookie", "PHPSESSID="+genSession)
 	req.Header.Add("Referer", "https://www.generatorslist.com/random/websites/random-youtube-channel")
 
 	resp, err := client.Do(req)
@@ -457,8 +466,8 @@ func DoRequest(client *http.Client, url string) ([]Channel, error) {
 	// you will need to set the device id and the authorization
 	// yourself if you want to use this api.
 	// you can get them from the VidIQ plugin with some effort.
-	req.Header.Add("X-Amplitude-Device-ID", "")
-	req.Header.Add("Authorization", "")
+	req.Header.Add("X-Amplitude-Device-ID", vidIQDeviceId)
+	req.Header.Add("Authorization", vidIQAuth)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-Vidiq-Client", "ext vff/3.43.2")
 	resp, err := client.Do(req)
